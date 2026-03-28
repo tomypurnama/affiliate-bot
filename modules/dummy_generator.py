@@ -1,22 +1,41 @@
 import random
 
-def generate_content(keyword):
-    hooks = [
-        f"Gak nyangka {keyword} ini lagi viral!",
-        f"Serius ini {keyword} murah banget!",
-        f"Jangan beli {keyword} sebelum lihat ini!"
-    ]
+hooks = [
+    "Gak nyangka {keyword} ini lagi viral!",
+    "Serius ini {keyword} murah banget!",
+    "Jangan beli {keyword} sebelum lihat ini!",
+    "{keyword} ini lagi dicari banyak orang!",
+    "Ini dia {keyword} yang lagi trending!"
+]
 
-    desc = [
-        f"{keyword} ini lagi banyak dicari karena kualitasnya bagus dan harga terjangkau.",
-        f"Cocok banget buat kamu yang butuh {keyword} murah tapi berkualitas.",
-        f"Produk ini lagi trending dan banyak review positif."
-    ]
+benefits = [
+    "Ringan dan nyaman dipakai",
+    "Harga terjangkau tapi kualitas oke",
+    "Banyak review positif",
+    "Cocok untuk penggunaan sehari-hari",
+    "Desain modern dan keren"
+]
+
+cta = [
+    "Buruan cek sebelum kehabisan!",
+    "Klik sekarang juga!",
+    "Jangan sampai ketinggalan!",
+    "Langsung beli sekarang!",
+    "Cek harga terbaru di bawah!"
+]
+
+def generate_content(keyword):
+    hook = random.choice(hooks).format(keyword=keyword)
+    benefit_list = random.sample(benefits, 2)
+    call = random.choice(cta)
 
     return f"""
-{random.choice(hooks)}
+🔥 {keyword.upper()} TERLARIS!
 
-{random.choice(desc)}
+{hook}
 
-🔥 {keyword.upper()} TERBAIK 2026!
+✅ {benefit_list[0]}
+✅ {benefit_list[1]}
+
+👉 {call}
 """
