@@ -1,10 +1,10 @@
-[
-  {
-    "name": "sepatu",
-    "link": "https://shopee.co.id/xxx"
-  },
-  {
-    "name": "headset",
-    "link": "https://shopee.co.id/yyy"
-  }
-]
+{
+  "hooks": [
+    "Gak nyangka {keyword} ini viral!",
+    "Ini {keyword} lagi trending!"
+  ],
+  "cta": [
+    "Klik sekarang!",
+    "Buruan beli!"
+  ]
+}
