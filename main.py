@@ -1,21 +1,12 @@
-from utils.telegram import send_message
-from handlers.affiliate_cmd import handle_affiliate
 import requests
-import time
-from config import TELEGRAM_TOKEN
-
-def get_updates(offset=None):
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKENimport requests
 import time
 import random
 
 # ================= CONFIG =================
-TELEGRAM_TOKEN = "8641066083:AAHXgDz3x1Qnjdn-alXDjsTaa45JkWBNNlg"
-USE_AI = False  # nanti ubah True kalau sudah pakai OpenAI
-
+TELEGRAM_TOKEN = "8641066083:AAH1NDpN7FHFg-PgQiiymREPRDGde3f8xe8"
 # ==========================================
 
-# ====== DUMMY GENERATOR (HIGH CONVERT) ======
+# ====== DATA KONTEN ======
 
 hooks = [
     "Gak nyangka {keyword} ini lagi viral!",
@@ -35,6 +26,7 @@ benefits = [
     "Desain modern dan keren",
     "Awet dan tahan lama",
     "Best seller di kategori ini",
+    "Dipakai banyak orang & terbukti bagus",
 ]
 
 cta = [
@@ -46,9 +38,11 @@ cta = [
 ]
 
 hashtags = [
-    "#produkviral", "#murahbanget", "#diskon", "#shopeehaul",
+    "#produkviral", "#murahbanget", "#diskon",
     "#racunshopee", "#barangviral", "#rekomendasi"
 ]
+
+# ====== GENERATOR ======
 
 def generate_content(keyword):
     hook = random.choice(hooks).format(keyword=keyword)
@@ -59,7 +53,7 @@ def generate_content(keyword):
     return f"""
 💥 {hook}
 
-🔥 {keyword.upper()} TERLARIS 2026!
+🔥 {keyword.upper()} TERLARIS!
 
 ✅ {benefit_list[0]}
 ✅ {benefit_list[1]}
@@ -70,20 +64,15 @@ def generate_content(keyword):
 {tags}
 """
 
-# ====== AFFILIATE LINK (SIMPLE) ======
+# ====== AFFILIATE LINK ======
 
-def get_affiliate_link(keyword):
+def get_link(keyword):
     return f"https://shopee.co.id/search?keyword={keyword.replace(' ', '%20')}"
 
-# ====== FORMAT FINAL ======
+# ====== FORMAT ======
 
-def format_message(keyword, content, link):
-    return f"""
-{content}
-
-🛒 Beli di sini:
-{link}
-"""
+def format_output(keyword, content):
+    return f"{content}\n\n🛒 Beli di sini:\n{get_link(keyword)}"
 
 # ====== TELEGRAM ======
 
@@ -106,26 +95,33 @@ def get_updates(offset=None):
 
 # ====== UI MENU ======
 
-def main_menu():
+def menu():
     return {
         "keyboard": [
-            ["🛍 Generate Konten"],
-            ["🔥 Contoh Output", "ℹ️ Bantuan"]
+            ["🛍 1 Konten", "🔥 5 Konten"],
+            ["📊 Contoh", "ℹ️ Bantuan"]
         ],
         "resize_keyboard": True
     }
 
-# ====== SAMPLE OUTPUT (LATIHAN) ======
+# ====== SAMPLE ======
 
-def sample_output():
-    samples = [
-        "🔥 SEPATU TERNYAMAN!\nCocok buat olahraga & santai!",
-        "🔥 HEADSET GAMING MURAH!\nBass mantap & nyaman!",
-        "🔥 JAM TANGAN KEREN!\nStylish & harga terjangkau!",
-    ]
-    return "\n\n".join(samples)
+def sample():
+    return """
+🔥 SEPATU TERBAIK!
 
-# ====== MAIN LOOP ======
+💥 Jangan beli sebelum lihat ini!
+
+✅ Ringan
+✅ Nyaman
+✅ Murah
+
+👉 Buruan cek!
+
+🛒 https://shopee.co.id/xxx
+"""
+
+# ====== MAIN ======
 
 def main():
     offset = None
@@ -138,42 +134,47 @@ def main():
             offset = update["update_id"] + 1
 
             try:
-                message = update["message"]
-                chat_id = message["chat"]["id"]
-                text = message.get("text", "")
+                msg = update["message"]
+                chat_id = msg["chat"]["id"]
+                text = msg.get("text", "")
 
                 # START
                 if text == "/start":
-                    send_message(
-                        chat_id,
-                        "🚀 Affiliate Bot Siap!\n\nKlik menu untuk mulai 👇",
-                        main_menu()
-                    )
+                    send_message(chat_id, "🚀 Affiliate Bot Ready!", menu())
 
                 # MENU
-                elif text == "🛍 Generate Konten":
-                    user_state[chat_id] = "WAITING_KEYWORD"
+                elif text == "🛍 1 Konten":
+                    user_state[chat_id] = "ONE"
                     send_message(chat_id, "Masukkan nama produk:")
 
-                elif text == "🔥 Contoh Output":
-                    send_message(chat_id, sample_output())
+                elif text == "🔥 5 Konten":
+                    user_state[chat_id] = "MULTI"
+                    send_message(chat_id, "Masukkan nama produk:")
+
+                elif text == "📊 Contoh":
+                    send_message(chat_id, sample())
 
                 elif text == "ℹ️ Bantuan":
-                    send_message(chat_id, "Ketik /start lalu pilih menu.")
+                    send_message(chat_id, "Pilih menu lalu masukkan produk.")
 
-                # INPUT KEYWORD
-                elif user_state.get(chat_id) == "WAITING_KEYWORD":
+                # INPUT
+                elif chat_id in user_state:
                     keyword = text
+                    mode = user_state[chat_id]
 
                     send_message(chat_id, "⏳ Membuat konten...")
 
-                    content = generate_content(keyword)
-                    link = get_affiliate_link(keyword)
-                    result = format_message(keyword, content, link)
+                    if mode == "ONE":
+                        content = generate_content(keyword)
+                        send_message(chat_id, format_output(keyword, content))
 
-                    send_message(chat_id, result)
+                    elif mode == "MULTI":
+                        for i in range(5):
+                            content = generate_content(keyword)
+                            send_message(chat_id, f"Konten {i+1}:\n{format_output(keyword, content)}")
+                            time.sleep(1)
 
-                    user_state[chat_id] = None
+                    user_state.pop(chat_id)
 
             except Exception as e:
                 print("Error:", e)
@@ -181,43 +182,6 @@ def main():
         time.sleep(1)
 
 # ====== RUN ======
-
-if __name__ == "__main__":
-    main()}/getUpdates"
-    params = {"timeout": 100, "offset": offset}
-    return requests.get(url, params=params).json()
-
-def main():
-    offset = None
-
-    while True:
-        updates = get_updates(offset)
-
-        for update in updates["result"]:
-            offset = update["update_id"] + 1
-
-            try:
-                message = update["message"]
-                chat_id = message["chat"]["id"]
-                text = message.get("text", "")
-
-                if text.startswith("/affiliate"):
-                    keyword = text.replace("/affiliate", "").strip()
-
-                    if not keyword:
-                        send_message(chat_id, "Masukkan keyword produk ya!")
-                        continue
-
-                    send_message(chat_id, "⏳ Sedang membuat konten...")
-
-                    result = handle_affiliate(keyword)
-
-                    send_message(chat_id, result)
-
-            except Exception as e:
-                print("Error:", e)
-
-        time.sleep(1)
 
 if __name__ == "__main__":
     main()
